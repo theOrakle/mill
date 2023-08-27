@@ -1,0 +1,9 @@
+{
+  "name": "Mill",
+  "domains": [
+    "sensor",	  
+    "binary_sensor"
+  ],
+  "iot_class": "cloud_pull",
+  "homeassistant": "2021.12.0"
+}
