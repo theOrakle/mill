@@ -1,6 +1,7 @@
 # Mill for Home Assistant
 
 Home Assistant integration for Mill food recycler.
+_This implementation is still WIP...  Not all the sensors are setup._
 
 # Installation
 
