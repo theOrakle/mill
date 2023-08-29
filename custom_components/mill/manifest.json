@@ -1,12 +1,14 @@
 {
   "domain": "mill",
   "name": "Mill API",
-  "documentation": "https://web.14671.net/sensors/mill",
+  "documentation": "https://github.com/theOrakle/sensors/mill",
   "config_flow": true,
   "integration_type": "hub",
   "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/theOrakle/mill/issues",
+  "loggers": ["custom_components.mill"],
   "requirements": ["pydash"],
-  "version": "0.1.0",
+  "version": "0.0.1",
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@theOrakle"]
 }

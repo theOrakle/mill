@@ -25,7 +25,7 @@ async def async_setup_entry(hass, config, async_add_entities) -> None:
     entities = []
     for device in devices:
         for field in SENSORS:
-            entities.append(MillSensor(hass, token, device, field))
+            entities.append(MillSensor(hass, token, device, SENSORS[field]))
 
     async_add_entities(entities)
 
@@ -35,10 +35,11 @@ class MillSensor(Entity):
         self._state = pydash.get(results,SENSORS[self.field])
         self._attributes = {}
 
-    def __init__(self,hass,token,device,field):
+    def __init__(self,hass,token,device,sensor):
         self.token = token
         self.device = device
-        self.field = field
+        self._name = sensor._name
+        self._icon = sensor._icon
         self._state = None
         self._attributes = {}
         self._attr_device_info = DeviceInfo(
@@ -49,15 +50,15 @@ class MillSensor(Entity):
 
     @property
     def unique_id(self):
-        return f"{DOMAIN}_{self.device}_{self.name}"
+        return f"{DOMAIN}_{self.device}_{self._name}"
 
     @property
     def name(self):
-        return f"{DOMAIN}_{self.field}"
+        return self._name
 
     @property
     def icon(self):
-        return 'mdi:recycle'
+        return self._icon
 
     @property
     def state(self):

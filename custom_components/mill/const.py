@@ -16,9 +16,15 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.BINARY_SENSOR
 ]
-SENSORS = {
-    "Status"            :       "data.attributes.status",
-    "Cycle"             :       "data.attributes.dgoCycle.reported"
+SENSORS: dict[str, SensorEntityDescription]] = {
+    "Status": SensorEntityDescription(
+        name="Status",
+        icon="mdi:recycle"
+        key="data.attributes.status"),
+    "Cycle": SensorEntityDescription(      
+        name="Cycle",
+        icon="mdi:recycle"
+        key="data.attributes.dgoCycle.reported")
 }
 BINARY_SENSORS = {
     "Locked"            :       "data.attributes.isLocked",
