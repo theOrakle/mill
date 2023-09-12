@@ -1,7 +1,7 @@
 {
   "domain": "mill",
   "name": "Mill API",
-  "documentation": "https://github.com/theOrakle/sensors/mill",
+  "documentation": "https://github.com/theOrakle/mill",
   "config_flow": true,
   "integration_type": "hub",
   "iot_class": "cloud_polling",

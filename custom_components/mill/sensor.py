@@ -32,14 +32,15 @@ async def async_setup_entry(hass, config, async_add_entities) -> None:
 class MillSensor(Entity):
 
     def parse_results(self,results):
-        self._state = pydash.get(results,SENSORS[self.field])
+        self._state = pydash.get(results,self.path)
         self._attributes = {}
 
     def __init__(self,hass,token,device,sensor):
         self.token = token
         self.device = device
-        self._name = sensor._name
-        self._icon = sensor._icon
+        self.path = sensor.key
+        self._name = sensor.name
+        self._icon = sensor.icon
         self._state = None
         self._attributes = {}
         self._attr_device_info = DeviceInfo(

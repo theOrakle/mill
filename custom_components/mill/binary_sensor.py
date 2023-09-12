@@ -25,20 +25,22 @@ async def async_setup_entry(hass, config, async_add_entities) -> None:
     entities = []
     for device in devices:
         for field in BINARY_SENSORS:
-            entities.append(MillBinarySensor(hass, token, device, field))
+            entities.append(MillSensor(hass, token, device, BINARY_SENSORS[field]))
 
     async_add_entities(entities)
 
-class MillBinarySensor(Entity):
+class MillSensor(Entity):
 
     def parse_results(self,results):
-        self._state = pydash.get(results,BINARY_SENSORS[self.field])
+        self._state = pydash.get(results,self.path)
         self._attributes = {}
 
-    def __init__(self,hass,token,device,field):
+    def __init__(self,hass,token,device,sensor):
         self.token = token
         self.device = device
-        self.field = field
+        self.path = sensor.key
+        self._name = sensor.name
+        self._icon = sensor.icon
         self._state = None
         self._attributes = {}
         self._attr_device_info = DeviceInfo(
@@ -49,15 +51,15 @@ class MillBinarySensor(Entity):
 
     @property
     def unique_id(self):
-        return f"{DOMAIN}_{self.device}_{self.name}"
+        return f"{DOMAIN}_{self.device}_{self._name}"
 
     @property
     def name(self):
-        return f"{DOMAIN}_{self.field}"
+        return self._name
 
     @property
     def icon(self):
-        return 'mdi:recycle'
+        return self._icon
 
     @property
     def state(self):
