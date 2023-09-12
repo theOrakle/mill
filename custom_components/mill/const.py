@@ -19,29 +19,37 @@ PLATFORMS = [
     Platform.BINARY_SENSOR
 ]
 SENSORS: dict[str, SensorEntityDescription] = {
-    "Status": SensorEntityDescription(
-        name="Status",
+    "mib": SensorEntityDescription(
+        name="Mass In Bucket",
         icon="mdi:list-status",
-        key="data.attributes.status"),
-    "Bucket": SensorEntityDescription(
-        name="Bucket",
+        key="data.attributes.massInBucket"),
+    "masbe": SensorEntityDescription(
+        name="Mass Added Since Bucket Empty",
+        icon="mdi:pail-plus",
+        key="data.attributes.massAddedSinceBucketEmpty"),
+    "bf": SensorEntityDescription(
+        name="Bucket Fullness",
         icon="mdi:delete-variant",
         key="data.attributes.bucketFullness"),
-    "Cycle": SensorEntityDescription(      
+    "cr": SensorEntityDescription(      
         name="Cycle",
         icon="mdi:dots-horizontal-circle",
         key="data.attributes.dgoCycle.reported")
 }
 BINARY_SENSORS = {
-    "Locked": BinarySensorEntityDescription(
-        name="Locked",
+    "ll": BinarySensorEntityDescription(
+        name="Lid Locked",
         icon="mdi:lock",
-        key="data.attributes.isLocked"),
-    "Bucket Missing": BinarySensorEntityDescription(      
+        key="data.attributes.lidLockState"),
+    "lo": BinarySensorEntityDescription(
+        name="Lid Open",
+        icon="mdi:delete-empty",
+        key="data.attributes.lidOpenState"),
+    "bm": BinarySensorEntityDescription(      
         name="Bucket Missing",
-        icon="mdi:delete-variant",
+        icon="mdi:pail-off",
         key="data.attributes.bucketMissing"),
-    "Child Lock": BinarySensorEntityDescription(      
+    "cl": BinarySensorEntityDescription(      
         name="Child Lock",
         icon="mdi:lock",
         key="data.attributes.childLockEnabled.reported")
