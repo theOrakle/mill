@@ -2,8 +2,6 @@
 
 Home Assistant integration for Mill food recycler.
 
-**This implementation is still WIP...  Not all the sensors are setup.**
-
 # Installation
 
 There are two main ways to install this custom component within your Home Assistant instance:
