@@ -1,21 +1,16 @@
-import websockets
-import aiohttp
-import json
 import pydash
 from homeassistant.helpers.entity import Entity, DeviceInfo
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from .const import DOMAIN, HOST, URL, _LOGGER, BINARY_SENSORS
+from .const import DOMAIN, _LOGGER, BINARY_SENSORS
 
 async def async_setup_entry(hass, config, async_add_entities) -> None:
     coordinator = hass.data[DOMAIN][config.entry_id]
     entities = []
     for device in coordinator.devices:
         for field in BINARY_SENSORS:
-            entities.append(MillSensor(coordinator, device, field, BINARY_SENSORS[field]))
+            entities.append(MySensor(coordinator, device, field, BINARY_SENSORS[field]))
     async_add_entities(entities)
 
-class MillSensor(Entity):
-
+class MySensor(Entity):
     def __init__(self,coordinator,device,idx,entity):
         self.coordinator = coordinator
         self.device = device 
@@ -28,7 +23,9 @@ class MillSensor(Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device)},
             manufacturer=DOMAIN,
-            model="1",
+            model="Base",
+            sw_version=pydash.get(self.coordinator.results[self.device],"data.attributes.firmwareVersion"),
+            hw_version=pydash.get(self.coordinator.results[self.device],"data.attributes.oscarVersion"),
             name=self.device)
 
     @property

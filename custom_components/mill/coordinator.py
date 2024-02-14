@@ -13,13 +13,11 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_ACCESS_TOKEN, CONF_CLIENT_ID
 from .const import DOMAIN, _LOGGER, UPDATE_FREQ, HOST, URL
 
-class MillCoordinator(DataUpdateCoordinator):
-
+class MyCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, config):
         self.results = {}
         self.token = config.data[CONF_ACCESS_TOKEN]
         self.userid = config.data[CONF_CLIENT_ID]
-
         super().__init__(
             hass,
             _LOGGER,

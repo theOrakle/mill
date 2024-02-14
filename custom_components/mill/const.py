@@ -8,8 +8,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "mill"
 
-COORDINATOR = "coordinator"
-
 # In Seconds
 UPDATE_FREQ = 30
 

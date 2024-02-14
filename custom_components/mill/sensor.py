@@ -7,11 +7,10 @@ async def async_setup_entry(hass, config, async_add_entities) -> None:
     entities = []
     for device in coordinator.devices:
         for field in SENSORS:
-            entities.append(MillSensor(coordinator, device, field, SENSORS[field]))
+            entities.append(MySensor(coordinator, device, field, SENSORS[field]))
     async_add_entities(entities)
 
-class MillSensor(Entity):
-
+class MySensor(Entity):
     def __init__(self,coordinator,device,idx,entity):
         self.coordinator = coordinator
         self.device = device
@@ -24,7 +23,9 @@ class MillSensor(Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device)},
             manufacturer=DOMAIN,
-            model="1",
+            model="Base",
+            sw_version=pydash.get(self.coordinator.results[self.device],"data.attributes.firmwareVersion"),
+            hw_version=pydash.get(self.coordinator.results[self.device],"data.attributes.oscarVersion"),
             name=self.device)
 
     @property
