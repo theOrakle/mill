@@ -1,6 +1,6 @@
 {
   "domain": "mill",
-  "name": "Mill API",
+  "name": "Mill",
   "documentation": "https://github.com/theOrakle/mill",
   "config_flow": true,
   "integration_type": "hub",
@@ -8,7 +8,7 @@
   "issue_tracker": "https://github.com/theOrakle/mill/issues",
   "loggers": ["custom_components.mill"],
   "requirements": ["pydash"],
-  "version": "0.0.5",
+  "version": "0.0.6",
   "dependencies": [],
   "codeowners": ["@theOrakle"]
 }

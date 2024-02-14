@@ -1,7 +1,6 @@
 """Constants for the Mill online component."""
 import logging
 
-from homeassistant.const import Platform
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntityDescription
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 
@@ -9,15 +8,14 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "mill"
 
-ICON = 'mdi:recycler'
+COORDINATOR = "coordinator"
+
+# In Seconds
+UPDATE_FREQ = 30
 
 HOST = "api.mill.com"
 URL = f"https://{HOST}/app/v1"
 
-PLATFORMS = [
-    Platform.SENSOR,
-    Platform.BINARY_SENSOR
-]
 SENSORS: dict[str, SensorEntityDescription] = {
     "mib": SensorEntityDescription(
         name="Mass In Bucket",

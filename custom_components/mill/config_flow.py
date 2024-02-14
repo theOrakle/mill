@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import pydash
 import aiohttp
 import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_ACCESS_TOKEN, CONF_CLIENT_ID
 from .exceptions import ApiException, AuthenticationError
 from .const import DOMAIN, URL, _LOGGER
 
@@ -27,6 +28,12 @@ async def validate_input(hass: core.HomeAssistant, data):
         _LOGGER.error('Troubles talking to the API')
         raise ApiException()
     if r.status == 201:
+        auth = {"Authorization": "Bearer " + results.get('token')}
+        async with aiohttp.ClientSession() as session:
+            async with session.get(URL+"/session_init?refresh_token=true",headers=auth) as r:
+                results = await r.json()
+                data[CONF_ACCESS_TOKEN] = pydash.get(results,"data.attributes.authToken")
+                data[CONF_CLIENT_ID] = pydash.get(results,"data.attributes.userId")
         return data
     else:
         raise AuthenticationError()
