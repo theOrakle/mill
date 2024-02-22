@@ -1,52 +1,82 @@
-import pydash
-from homeassistant.helpers.entity import Entity, DeviceInfo
-from .const import DOMAIN, _LOGGER, BINARY_SENSORS
+"""Binary sensor platform for mill."""
+from __future__ import annotations
 
-async def async_setup_entry(hass, config, async_add_entities) -> None:
-    coordinator = hass.data[DOMAIN][config.entry_id]
-    entities = []
-    for device in coordinator.devices:
-        for field in BINARY_SENSORS:
-            entities.append(MySensor(coordinator, device, field, BINARY_SENSORS[field]))
-    async_add_entities(entities)
+from homeassistant.const import EntityCategory
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 
-class MySensor(Entity):
-    def __init__(self,coordinator,device,idx,entity):
-        self.coordinator = coordinator
-        self.device = device 
-        self.idx = idx
-        self.path = entity.key
-        self._name = entity.name
-        self._icon = entity.icon
-        self._state = None
-        self._attributes = {}
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device)},
-            manufacturer=DOMAIN,
-            model="Base",
-            sw_version=pydash.get(self.coordinator.results[self.device],"data.attributes.firmwareVersion"),
-            hw_version=pydash.get(self.coordinator.results[self.device],"data.attributes.oscarVersion"),
-            name=self.device)
+from .const import DOMAIN
+from .coordinator import MillDataUpdateCoordinator
+from .entity import MillEntity
+
+ENTITY_DESCRIPTIONS = (
+    BinarySensorEntityDescription(
+        key="lidLockState",
+        name="Lid Locked",
+        device_class=BinarySensorDeviceClass.LOCK,
+    ),
+    BinarySensorEntityDescription(
+        key="lidOpenState",
+        name="Lid Open",
+        device_class=BinarySensorDeviceClass.DOOR,
+    ),
+    BinarySensorEntityDescription(
+        key="bucketMissing",
+        name="Bucket Missing",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    BinarySensorEntityDescription(
+        key="childLockEnabled",
+        name="Child Lock",
+        device_class=BinarySensorDeviceClass.LOCK,
+    ),
+    BinarySensorEntityDescription(
+        key="online",
+        name="Online",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+
+async def async_setup_entry(hass, entry, async_add_devices):
+    """Set up the binary_sensor platform."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_devices(
+        MillBinarySensor(
+            coordinator=coordinator,
+            entity_description=entity_description,
+            device=device,
+        )
+        for entity_description in ENTITY_DESCRIPTIONS
+        for device in coordinator.data
+    )
+
+
+class MillBinarySensor(MillEntity, BinarySensorEntity):
+    """mill binary_sensor class."""
+
+    def __init__(
+        self,
+        coordinator: MillDataUpdateCoordinator,
+        entity_description: BinarySensorEntityDescription,
+        device,
+    ) -> None:
+        """Initialize the binary_sensor class."""
+        super().__init__(coordinator,entity_description,device)
+        self.entity_description = entity_description
+        self.device = device
 
     @property
-    def unique_id(self):
-        return f"{DOMAIN}_{self.device}_{self._name}"
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def icon(self):
-        return self._icon
-
-    @property
-    def state(self):
-        return self._state
-
-    @property
-    def state_attributes(self):
-        return self._attributes
-
-    async def async_update(self) -> None:
-        self._state = pydash.get(self.coordinator.results[self.device],self.path) 
+    def is_on(self) -> bool:
+        """Return true if the binary_sensor is on."""
+        desc = self.entity_description
+        value = self.coordinator.data[self.device].get(desc.key)
+        if isinstance(value, dict):
+            value = value.get('reported')
+        if self.entity_description.device_class == BinarySensorDeviceClass.LOCK:
+            value = not(value)
+        return value

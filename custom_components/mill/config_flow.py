@@ -1,56 +1,82 @@
+"""Adds config flow for Mill."""
 from __future__ import annotations
 
-import pydash
-import aiohttp
 import voluptuous as vol
-from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_ACCESS_TOKEN, CONF_CLIENT_ID
-from .exceptions import ApiException, AuthenticationError
-from .const import DOMAIN, URL, _LOGGER
+from homeassistant import config_entries
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_TOKEN
+from homeassistant.helpers import selector
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-DATA_SCHEMA = vol.Schema(
-  {
-    vol.Required(CONF_USERNAME): str,
-    vol.Required(CONF_PASSWORD): str
-  }
+from .api import (
+    MillApiClient,
+    MillApiClientAuthenticationError,
+    MillApiClientCommunicationError,
+    MillApiClientError,
 )
+from .const import DOMAIN, LOGGER
 
-async def validate_input(hass: core.HomeAssistant, data):
-    creds = {
-        "email":    data[CONF_USERNAME],
-        "password": data[CONF_PASSWORD]
-    }
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(URL+"/tokens",data=creds) as r:
-                results = await r.json()
-    except:
-        _LOGGER.error('Troubles talking to the API')
-        raise ApiException()
-    if r.status == 201:
-        auth = {"Authorization": "Bearer " + results.get('token')}
-        async with aiohttp.ClientSession() as session:
-            async with session.get(URL+"/session_init?refresh_token=true",headers=auth) as r:
-                results = await r.json()
-                data[CONF_ACCESS_TOKEN] = pydash.get(results,"data.attributes.authToken")
-                data[CONF_CLIENT_ID] = pydash.get(results,"data.attributes.userId")
-        return data
-    else:
-        raise AuthenticationError()
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    async def async_step_user(self, user_input=None):
-        errors = {}
+class MillFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+    """Config flow for Mill."""
+
+    VERSION = 1
+
+    async def async_step_user(
+        self,
+        user_input: dict | None = None,
+    ) -> config_entries.FlowResult:
+        """Handle a flow initialized by the user."""
+        _errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=user_input[CONF_USERNAME], data=info)
-            except AuthenticationError:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                user_input[CONF_TOKEN] = await self._test_credentials(
+                    username=user_input[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
+                )
+            except MillApiClientAuthenticationError as exception:
+                LOGGER.warning(exception)
+                _errors["base"] = "auth"
+            except MillApiClientCommunicationError as exception:
+                LOGGER.error(exception)
+                _errors["base"] = "connection"
+            except MillApiClientError as exception:
+                LOGGER.exception(exception)
+                _errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME],
+                    data=user_input,
+                )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )   
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME,
+                        default=(user_input or {}).get(CONF_USERNAME),
+                    ): selector.TextSelector(
+                        selector.TextSelectorConfig(
+                            type=selector.TextSelectorType.TEXT
+                        ),
+                    ),
+                    vol.Required(CONF_PASSWORD): selector.TextSelector(
+                        selector.TextSelectorConfig(
+                            type=selector.TextSelectorType.PASSWORD
+                        ),
+                    ),
+                }
+            ),
+            errors=_errors,
+        )
+
+    async def _test_credentials(self, username: str, password: str) -> None:
+        """Validate credentials."""
+        client = MillApiClient(
+            username=username,
+            password=password,
+            session=async_create_clientsession(self.hass),
+            token=None,
+        )
+        await client.async_get_data()
+        return client.token
