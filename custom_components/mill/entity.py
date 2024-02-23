@@ -24,7 +24,7 @@ class MillEntity(CoordinatorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device)},
             name=device,
-            model=VERSION,
+            model=f"Integration {VERSION}",
             manufacturer=DOMAIN.capitalize(),
             sw_version=coordinator.data[device].get("firmwareVersion"),
             hw_version=coordinator.data[device].get("oscarVersion"),
