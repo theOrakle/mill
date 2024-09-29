@@ -10,7 +10,9 @@ import websockets
 import json
 
 HOST = "api.mill.com"
-URL = f"https://{HOST}/app/v1"
+AUTH_URL = f"https://{HOST}/app/v1"
+CLOUD_URL = f"https://cloud.{HOST}/v1"
+
 from .const import LOGGER
 
 class MillApiClientError(Exception):
@@ -58,7 +60,7 @@ class MillApiClient:
         async with async_timeout.timeout(10):
             response = await self._session.request(
                 method="post", 
-                url=f"{URL}/tokens",
+                url=f"{AUTH_URL}/tokens",
                 json=creds
             )
         if response.status in (401, 403):
@@ -69,26 +71,26 @@ class MillApiClient:
         auth = {"Authorization": "Bearer " + results.get('token')}
         results = await self._api_wrapper(
             method="get", 
-            url=f"{URL}/session_init?refresh_token=true",
+            url=f"{CLOUD_URL}/session_init?refresh_token=true",
             headers=auth
         )
         LOGGER.debug(results)
-        self.token = results["data"]["attributes"]["authToken"]
-        self.userId = results["data"]["attributes"]["userId"]
-        self.devices = results["data"]["attributes"]["deviceIds"]
+        self.token = results["authToken"]
+        self.userId = results["userId"]
+        self.devices = [d['device_id'] for d in results["devices"]]
 
     async def async_get_data(self) -> any:
         """Get data from the API."""
         data = {}
         await self.async_load_devices()
-        url = f"wss://{HOST}/app/v1/websocket/device"
+        url = f"wss://websocket.cloud.{HOST}/"
         for device in self.devices:
             headers = {
                 'Host':                 HOST,
                 'Upgrade':              'websocket',
-                'Origin':               f'https://{HOST}',
-                'X-Device-Id':          device,
-                'X-Authorization':      self.token,
+                'Origin':               f'https://websocket.cloud.{HOST}',
+                'deviceId':             device,
+                'Authorization':        self.token,
                 'Connection':           'Upgrade'
             }
             try:
@@ -98,9 +100,10 @@ class MillApiClient:
                 raise MillApiClientCommunicationError(
                     "Error fetching information",
                 ) from Exception
-            data[device] = json.loads(results)["data"]["attributes"]
+            data[device] = json.loads(results)
             LOGGER.debug(data)
         return data
+
 
     async def _api_wrapper(
         self,
