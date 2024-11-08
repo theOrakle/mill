@@ -7,10 +7,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, VERSION
 from .coordinator import MillDataUpdateCoordinator
 
-
 class MillEntity(CoordinatorEntity):
     """MillEntity class."""
-
 
     def __init__(
         self, 

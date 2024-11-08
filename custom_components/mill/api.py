@@ -53,22 +53,8 @@ class MillApiClient:
         if self.devices:
             LOGGER.debug("Exiting device load")
             return
-        creds = {
-            "email":    self._username,
-            "password": self._password
-        }
-        async with async_timeout.timeout(10):
-            response = await self._session.request(
-                method="post", 
-                url=f"{AUTH_URL}/tokens",
-                json=creds
-            )
-        if response.status in (401, 403):
-            raise MillApiClientAuthenticationError(
-                "Invalid credentials",
-            )
-        results=await response.json()
-        auth = {"Authorization": "Bearer " + results.get('token')}
+        await self.async_update_token()
+        auth = {"Authorization": "Bearer " + self.token}
         results = await self._api_wrapper(
             method="get", 
             url=f"{CLOUD_URL}/session_init?refresh_token=true",
@@ -103,6 +89,48 @@ class MillApiClient:
             data[device] = json.loads(results)
             LOGGER.debug(data)
         return data
+
+
+    async def async_update_token(self):
+        creds = {
+            "email":    self._username,
+            "password": self._password
+        }
+        async with async_timeout.timeout(10):
+            response = await self._session.request(
+                method="post",
+                url=f"{AUTH_URL}/tokens",
+                json=creds
+            )
+        if response.status in (401, 403):
+            raise MillApiClientAuthenticationError(
+                "Invalid credentials",
+            )
+        results=await response.json()
+        self.token = results.get('token')
+
+
+    async def async_set_cycle(self, device, cycle_state):
+        """Set the cycle."""
+        await self.async_update_token()
+        auth = {"Authorization": "Bearer " + self.token}
+        async with async_timeout.timeout(10):
+            response = await self._session.request(
+                method="post", 
+                url=f"{CLOUD_URL}/device_settings/{device}",
+                json={"settings":{"dgoCycle": cycle_state}},
+                headers=auth
+            )
+        if response.status in (401, 403):
+            raise MillApiClientAuthenticationError(
+                "Invalid credentials",
+            )
+        if response.status != 200:
+            LOGGER.error(response)
+            raise MillApiClientError(
+                f"Unexpectred failure: [{response.status}] {response.reason}",
+            )
+        await response.json()
 
 
     async def _api_wrapper(

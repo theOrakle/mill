@@ -1,6 +1,6 @@
 {
   "name": "Mill",
-  "domains": ["binary_sensor", "sensor"],
+  "domains": ["binary_sensor", "sensor", "switch"],
   "homeassistant": "2023.1.0",
   "iot_class": "cloud_polling",
   "render_readme": true

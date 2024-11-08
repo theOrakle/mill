@@ -27,11 +27,6 @@ ENTITY_DESCRIPTIONS = (
         name="Bucket Fullness",
         icon="mdi:delete-variant",
     ),
-    SensorEntityDescription(
-        key="dgoCycle",
-        name="Cycle",
-        icon="mdi:dots-horizontal-circle",
-    ),
 )
 
 
