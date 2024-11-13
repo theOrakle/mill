@@ -80,7 +80,7 @@ class MillApiClient:
                 'Connection':           'Upgrade'
             }
             try:
-                async with websockets.connect(extra_headers=headers,uri=url) as ws:
+                async with websockets.connect(additional_headers=headers,uri=url) as ws:
                     results = await ws.recv()
             except:
                 raise MillApiClientCommunicationError(

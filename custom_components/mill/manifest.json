@@ -8,7 +8,7 @@
   "issue_tracker": "https://github.com/theOrakle/mill/issues",
   "loggers": ["custom_components.mill"],
   "requirements": [],
-  "version": "1.0.10",
+  "version": "1.0.11",
   "dependencies": [],
   "codeowners": ["@theOrakle"]
 }

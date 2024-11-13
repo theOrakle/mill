@@ -1,2 +1,2 @@
 homeassistant>=2023.1
-websockets
+websockets>=14.0
