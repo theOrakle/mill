@@ -50,7 +50,7 @@ class MillSwitch(MillEntity, SwitchEntity):
         desc = self.entity_description
         desire = self.coordinator.data[self.device].get(desc.key)['desired']
         report = self.coordinator.data[self.device].get(desc.key)['reported']
-        if desire != report:
+        if desire != report and desire != None:
             state = desire
         else:
             state = report
@@ -59,7 +59,7 @@ class MillSwitch(MillEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the mill off."""
         state = 'Idle'
-        await self.coordinator.client.async_set_cycle(self.device, state)        
+        await self.coordinator.client.async_set_cycle(self.device, state) 
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs):
