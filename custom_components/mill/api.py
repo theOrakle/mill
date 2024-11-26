@@ -54,14 +54,14 @@ class MillApiClient:
             LOGGER.debug("Exiting device load")
             return
         await self.async_update_token()
-        auth = {"Authorization": "Bearer " + self.token}
+        auth = {"Authorization": "Bearer " + self._token}
         results = await self._api_wrapper(
             method="get", 
             url=f"{CLOUD_URL}/session_init?refresh_token=true",
             headers=auth
         )
         LOGGER.debug(results)
-        self.token = results["authToken"]
+        self._token = results["authToken"]
         self.userId = results["userId"]
         self.devices = [d['device_id'] for d in results["devices"]]
 
@@ -76,7 +76,7 @@ class MillApiClient:
                 'Upgrade':              'websocket',
                 'Origin':               f'https://websocket.cloud.{HOST}',
                 'deviceId':             device,
-                'Authorization':        self.token,
+                'Authorization':        self._token,
                 'Connection':           'Upgrade'
             }
             try:
@@ -107,13 +107,13 @@ class MillApiClient:
                 "Invalid credentials",
             )
         results=await response.json()
-        self.token = results.get('token')
+        self._token = results.get('token')
 
 
     async def async_set_cycle(self, device, cycle_state):
         """Set the cycle."""
         await self.async_update_token()
-        auth = {"Authorization": "Bearer " + self.token}
+        auth = {"Authorization": "Bearer " + self._token}
         results = await self._api_wrapper(
             method="post", 
             url=f"{CLOUD_URL}/device_settings/{device}",
