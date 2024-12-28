@@ -79,4 +79,4 @@ class MillFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             token=None,
         )
         await client.async_get_data()
-        return client.token
+        return client._token
