@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription, SensorDeviceClass
+from datetime import datetime
 
 from .const import DOMAIN
 from .coordinator import MillDataUpdateCoordinator
@@ -26,6 +27,12 @@ ENTITY_DESCRIPTIONS = (
         key="bucketFullness",
         name="Bucket Fullness",
         icon="mdi:delete-variant",
+    ),
+    SensorEntityDescription(
+        key="currentCycleEndTime",
+        name="Cycle End Time",
+        icon="mdi:clock",
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
 )
 
@@ -62,7 +69,11 @@ class MillSensor(MillEntity, SensorEntity):
     def native_value(self) -> str:
         """Return the native value of the sensor."""
         desc = self.entity_description
-        value = self.coordinator.data[self.device].get(desc.key)
+        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
+          str_val = self.coordinator.data[self.device].get(desc.key)
+          value = datetime.strptime(str_val, "%Y-%m-%dT%H:%M:%S%z")
+        else:
+          value = self.coordinator.data[self.device].get(desc.key)
         if isinstance(value, dict):
             value = value.get('reported')
         return value
