@@ -29,6 +29,11 @@ ENTITY_DESCRIPTIONS = (
         icon="mdi:delete-variant",
     ),
     SensorEntityDescription(
+        key="grinderState",
+        name="Grinder State",
+        icon="mdi:hydro-power",
+    ),
+    SensorEntityDescription(
         key="currentCycleEndTime",
         name="Cycle End Time",
         icon="mdi:clock",
