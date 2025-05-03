@@ -78,6 +78,8 @@ class MillSensor(MillEntity, SensorEntity):
           str_val = self.coordinator.data[self.device].get(desc.key)
           if str_val:
             value = datetime.strptime(str_val, "%Y-%m-%dT%H:%M:%S%z")
+          else:
+            value = None
         else:
           value = self.coordinator.data[self.device].get(desc.key)
         if isinstance(value, dict):
