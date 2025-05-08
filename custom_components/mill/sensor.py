@@ -14,14 +14,14 @@ ENTITY_DESCRIPTIONS = (
         name="Mass In Bucket",
         icon="mdi:list-status",
         device_class=SensorDeviceClass.WEIGHT,
-        native_unit_of_measurement="lb",
+        native_unit_of_measurement="kg",
     ),
     SensorEntityDescription(
         key="massAddedSinceBucketEmpty",
         name="Mass Added Since Bucket Empty",
         icon="mdi:pail-plus",
         device_class=SensorDeviceClass.WEIGHT,
-        native_unit_of_measurement="lb",
+        native_unit_of_measurement="kg",
     ),
     SensorEntityDescription(
         key="bucketFullness",
