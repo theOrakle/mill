@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription, SensorDeviceClass
-from datetime import datetime
+from datetime import parser
 
 from .const import DOMAIN
 from .coordinator import MillDataUpdateCoordinator
@@ -77,7 +77,7 @@ class MillSensor(MillEntity, SensorEntity):
         if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
           str_val = self.coordinator.data[self.device].get(desc.key)
           if str_val:
-            value = datetime.strptime(str_val, "%Y-%m-%dT%H:%M:%S%z")
+            value = parser.isoparse(str_val)
           else:
             value = None
         else:
