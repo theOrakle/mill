@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription, SensorDeviceClass
-from datetime import parser
+from dateutil import parser
 
 from .const import DOMAIN
 from .coordinator import MillDataUpdateCoordinator
