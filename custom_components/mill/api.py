@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import socket
+import inspect
 
 import aiohttp
 import async_timeout
@@ -80,9 +81,20 @@ class MillApiClient:
                 'Connection':           'Upgrade'
             }
             try:
-                async with websockets.connect(additional_headers=headers,uri=url) as ws:
+                connect_args = {
+                    "uri": url,
+                    "headers": headers
+                }
+            
+                sig = inspect.signature(websockets.connect).parameters
+                if "extra_headers" in sig:
+                    connect_args["extra_headers"] = connect_args.pop("headers")
+                else:
+                    connect_args["additional_headers"] = connect_args.pop("headers")
+            
+                async with websockets.connect(**connect_args) as ws:
                     results = await ws.recv()
-            except:
+            except Exception:
                 raise MillApiClientCommunicationError(
                     "Error fetching information",
                 ) from Exception
