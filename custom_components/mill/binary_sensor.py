@@ -29,11 +29,6 @@ ENTITY_DESCRIPTIONS = (
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     BinarySensorEntityDescription(
-        key="childLockEnabled",
-        name="Child Lock",
-        device_class=BinarySensorDeviceClass.LOCK,
-    ),
-    BinarySensorEntityDescription(
         key="online",
         name="Online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,

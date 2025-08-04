@@ -122,6 +122,26 @@ class MillApiClient:
         self._token = results.get('token')
 
 
+    async def async_set_lock(self, device, setting: str):
+        """Set the lid lock setting.
+        
+        Valid settings: 'AlwaysLocked', 'AlwaysUnlocked', 'LockedWhenHot'
+        """
+        valid_settings = ['AlwaysLocked', 'AlwaysUnlocked', 'LockedWhenHot']
+        if setting not in valid_settings:
+            raise ValueError(f"Invalid lid lock setting: {setting}. Must be one of {valid_settings}")
+            
+        await self.async_update_token()
+        auth = {"Authorization": "Bearer " + self._token}
+        results = await self._api_wrapper(
+            method="post", 
+            url=f"{CLOUD_URL}/device_settings/{device}",
+            data={"settings": {"lidLockSetting": setting}},
+            headers=auth
+        )
+        LOGGER.debug(f"Lid lock setting set to {setting}: {results}")
+
+
     async def async_set_cycle(self, device, cycle_state):
         """Set the cycle."""
         await self.async_update_token()
