@@ -10,11 +10,14 @@ import async_timeout
 import websockets
 import json
 
+import homeassistant.util.ssl
+
+from .const import LOGGER
+
 HOST = "api.mill.com"
 AUTH_URL = f"https://{HOST}/app/v1"
 CLOUD_URL = f"https://cloud.{HOST}/v1"
 
-from .const import LOGGER
 
 class MillApiClientError(Exception):
     """Exception to indicate a general API error."""
@@ -57,7 +60,7 @@ class MillApiClient:
         await self.async_update_token()
         auth = {"Authorization": "Bearer " + self._token}
         results = await self._api_wrapper(
-            method="get", 
+            method="get",
             url=f"{CLOUD_URL}/session_init?refresh_token=true",
             headers=auth
         )
@@ -83,15 +86,16 @@ class MillApiClient:
             try:
                 connect_args = {
                     "uri": url,
-                    "headers": headers
+                    "headers": headers,
+                    "ssl": homeassistant.util.ssl.client_context()
                 }
-            
+
                 sig = inspect.signature(websockets.connect).parameters
                 if "extra_headers" in sig:
                     connect_args["extra_headers"] = connect_args.pop("headers")
                 else:
                     connect_args["additional_headers"] = connect_args.pop("headers")
-            
+
                 async with websockets.connect(**connect_args) as ws:
                     results = await ws.recv()
             except Exception:
@@ -101,7 +105,6 @@ class MillApiClient:
             data[device] = json.loads(results)
             LOGGER.debug(data)
         return data
-
 
     async def async_update_token(self):
         creds = {
@@ -124,17 +127,17 @@ class MillApiClient:
 
     async def async_set_lock(self, device, setting: str):
         """Set the lid lock setting.
-        
+
         Valid settings: 'AlwaysLocked', 'AlwaysUnlocked', 'LockedWhenHot'
         """
         valid_settings = ['AlwaysLocked', 'AlwaysUnlocked', 'LockedWhenHot']
         if setting not in valid_settings:
             raise ValueError(f"Invalid lid lock setting: {setting}. Must be one of {valid_settings}")
-            
+
         await self.async_update_token()
         auth = {"Authorization": "Bearer " + self._token}
         results = await self._api_wrapper(
-            method="post", 
+            method="post",
             url=f"{CLOUD_URL}/device_settings/{device}",
             data={"settings": {"lidLockSetting": setting}},
             headers=auth
@@ -147,7 +150,7 @@ class MillApiClient:
         await self.async_update_token()
         auth = {"Authorization": "Bearer " + self._token}
         results = await self._api_wrapper(
-            method="post", 
+            method="post",
             url=f"{CLOUD_URL}/device_settings/{device}",
             data={"settings":{"dgoCycle": cycle_state}},
             headers=auth
