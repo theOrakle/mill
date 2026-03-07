@@ -18,12 +18,13 @@ class MillEntity(CoordinatorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        device_data = coordinator.data.get(device, {})
         self._attr_unique_id = f"{DOMAIN}_{device}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device)},
             name=device,
             model=f"Integration {VERSION}",
             manufacturer=DOMAIN.capitalize(),
-            sw_version=coordinator.data[device].get("firmwareVersion"),
-            hw_version=coordinator.data[device].get("oscarVersion"),
+            sw_version=device_data.get("firmwareVersion"),
+            hw_version=device_data.get("oscarVersion"),
         )

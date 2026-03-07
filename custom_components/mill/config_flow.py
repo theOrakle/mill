@@ -70,7 +70,7 @@ class MillFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=_errors,
         )
 
-    async def _test_credentials(self, username: str, password: str) -> None:
+    async def _test_credentials(self, username: str, password: str) -> str | None:
         """Validate credentials."""
         client = MillApiClient(
             username=username,

@@ -69,9 +69,11 @@ class MillBinarySensor(MillEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true if the binary_sensor is on."""
         desc = self.entity_description
-        value = self.coordinator.data[self.device].get(desc.key)
+        value = self.coordinator.data.get(self.device, {}).get(desc.key)
         if isinstance(value, dict):
-            value = value.get('reported')
+            value = value.get("reported")
+        if value is None:
+            return False
         if self.entity_description.device_class == BinarySensorDeviceClass.LOCK:
-            value = not(value)
-        return value
+            value = not bool(value)
+        return bool(value)

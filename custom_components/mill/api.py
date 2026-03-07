@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-import socket
 import inspect
+import socket
 
 import aiohttp
 import async_timeout
@@ -50,9 +50,9 @@ class MillApiClient:
         self._password = password
         self._session = session
         self._token = token
-        self.devices = []
+        self.devices: list[str] = []
 
-    async def async_load_devices(self) -> any:
+    async def async_load_devices(self) -> None:
         """Get token from the API."""
         if self.devices:
             LOGGER.debug("Exiting device load")
@@ -67,11 +67,11 @@ class MillApiClient:
         LOGGER.debug(results)
         self._token = results["authToken"]
         self.userId = results["userId"]
-        self.devices = [d['device_id'] for d in results["devices"]]
+        self.devices = [d["device_id"] for d in results["devices"] if isinstance(d, dict) and d.get("device_id")]
 
-    async def async_get_data(self) -> any:
+    async def async_get_data(self) -> dict[str, dict]:
         """Get data from the API."""
-        data = {}
+        data: dict[str, dict] = {}
         await self.async_load_devices()
         url = f"wss://websocket.cloud.{HOST}/"
         for device in self.devices:
@@ -98,15 +98,19 @@ class MillApiClient:
 
                 async with websockets.connect(**connect_args) as ws:
                     results = await ws.recv()
-            except Exception:
+            except Exception as exception:  # noqa: BLE001
                 raise MillApiClientCommunicationError(
                     "Error fetching information",
-                ) from Exception
-            data[device] = json.loads(results)
+                ) from exception
+            try:
+                data[device] = json.loads(results)
+            except json.JSONDecodeError:
+                LOGGER.debug("Skipping non-JSON websocket payload for device %s", device)
+                continue
             LOGGER.debug(data)
         return data
 
-    async def async_update_token(self):
+    async def async_update_token(self) -> None:
         creds = {
             "email":    self._username,
             "password": self._password
@@ -121,11 +125,12 @@ class MillApiClient:
             raise MillApiClientAuthenticationError(
                 "Invalid credentials",
             )
-        results=await response.json()
-        self._token = results.get('token')
+        response.raise_for_status()
+        results = await response.json()
+        self._token = results.get("token")
 
 
-    async def async_set_lock(self, device, setting: str):
+    async def async_set_lock(self, device: str, setting: str) -> None:
         """Set the lid lock setting.
 
         Valid settings: 'AlwaysLocked', 'AlwaysUnlocked', 'LockedWhenHot'
@@ -145,7 +150,7 @@ class MillApiClient:
         LOGGER.debug(f"Lid lock setting set to {setting}: {results}")
 
 
-    async def async_set_cycle(self, device, cycle_state):
+    async def async_set_cycle(self, device: str, cycle_state: str) -> None:
         """Set the cycle."""
         await self.async_update_token()
         auth = {"Authorization": "Bearer " + self._token}
@@ -164,7 +169,7 @@ class MillApiClient:
         url: str,
         data: dict | None = None,
         headers: dict | None = None,
-    ) -> any:
+    ) -> dict:
         """Get information from the API."""
         try:
             async with async_timeout.timeout(10):

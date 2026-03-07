@@ -48,9 +48,14 @@ class MillSwitch(MillEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return true if the mill is on."""
         desc = self.entity_description
-        desire = self.coordinator.data[self.device].get(desc.key)['desired']
-        report = self.coordinator.data[self.device].get(desc.key)['reported']
-        if desire != report and desire != None:
+        state_data = self.coordinator.data.get(self.device, {}).get(desc.key, {})
+        if isinstance(state_data, dict):
+            desire = state_data.get("desired")
+            report = state_data.get("reported")
+        else:
+            desire = None
+            report = state_data
+        if desire != report and desire is not None:
             state = desire
         else:
             state = report
