@@ -1,7 +1,12 @@
 """Sensor platform for mill."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription, SensorDeviceClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from dateutil import parser
 
 from .const import DOMAIN
@@ -38,6 +43,22 @@ ENTITY_DESCRIPTIONS = (
         name="Cycle End Time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="impactEnergyTotalKwh",
+        name="Total Energy Use",
+        icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement="kWh",
+    ),
+    SensorEntityDescription(
+        key="impactEnergyCurrentMonthKwh",
+        name="Current Month Energy Use",
+        icon="mdi:calendar-month",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="kWh",
     ),
 )
 
