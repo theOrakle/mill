@@ -57,7 +57,6 @@ ENTITY_DESCRIPTIONS = (
         name="Current Month Energy Use",
         icon="mdi:calendar-month",
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="kWh",
     ),
 )
