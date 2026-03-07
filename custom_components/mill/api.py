@@ -7,8 +7,8 @@ import socket
 
 import aiohttp
 import async_timeout
-import websockets
 import json
+import websockets
 
 import homeassistant.util.ssl
 
@@ -17,6 +17,8 @@ from .const import LOGGER
 HOST = "api.mill.com"
 AUTH_URL = f"https://{HOST}/app/v1"
 CLOUD_URL = f"https://cloud.{HOST}/v1"
+WS_CONNECT_TIMEOUT = 10
+WS_RECV_TIMEOUT = 10
 
 
 class MillApiClientError(Exception):
@@ -72,6 +74,7 @@ class MillApiClient:
     async def async_get_data(self) -> dict[str, dict]:
         """Get data from the API."""
         data: dict[str, dict] = {}
+        had_error = False
         await self.async_load_devices()
         url = f"wss://websocket.cloud.{HOST}/"
         for device in self.devices:
@@ -87,7 +90,8 @@ class MillApiClient:
                 connect_args = {
                     "uri": url,
                     "headers": headers,
-                    "ssl": homeassistant.util.ssl.client_context()
+                    "ssl": homeassistant.util.ssl.client_context(),
+                    "open_timeout": WS_CONNECT_TIMEOUT,
                 }
 
                 sig = inspect.signature(websockets.connect).parameters
@@ -97,17 +101,23 @@ class MillApiClient:
                     connect_args["additional_headers"] = connect_args.pop("headers")
 
                 async with websockets.connect(**connect_args) as ws:
-                    results = await ws.recv()
+                    async with async_timeout.timeout(WS_RECV_TIMEOUT):
+                        results = await ws.recv()
             except Exception as exception:  # noqa: BLE001
-                raise MillApiClientCommunicationError(
-                    "Error fetching information",
-                ) from exception
+                had_error = True
+                LOGGER.debug("Websocket read failed for device %s: %s", device, exception)
+                continue
             try:
                 data[device] = json.loads(results)
             except json.JSONDecodeError:
                 LOGGER.debug("Skipping non-JSON websocket payload for device %s", device)
+                had_error = True
                 continue
             LOGGER.debug(data)
+        if not data and had_error:
+            raise MillApiClientCommunicationError(
+                "Error fetching information from websocket devices",
+            )
         return data
 
     async def async_update_token(self) -> None:
