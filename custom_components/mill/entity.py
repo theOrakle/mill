@@ -26,5 +26,5 @@ class MillEntity(CoordinatorEntity):
             model=f"Integration {VERSION}",
             manufacturer=DOMAIN.capitalize(),
             sw_version=device_data.get("firmwareVersion"),
-            hw_version=device_data.get("oscarVersion"),
+            hw_version=str(v) if (v := device_data.get("oscarVersion")) is not None else None,
         )

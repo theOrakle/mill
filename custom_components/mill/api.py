@@ -88,26 +88,37 @@ class MillApiClient:
                 'Authorization':        self._token,
                 'Connection':           'Upgrade'
             }
-            try:
-                connect_args = {
-                    "uri": url,
-                    "headers": headers,
-                    "ssl": homeassistant.util.ssl.client_context(),
-                    "open_timeout": WS_CONNECT_TIMEOUT,
-                }
+            max_attempts = 3
+            results = None
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    connect_args = {
+                        "uri": url,
+                        "headers": headers,
+                        "ssl": homeassistant.util.ssl.client_context(),
+                        "open_timeout": WS_CONNECT_TIMEOUT,
+                    }
 
-                sig = inspect.signature(websockets.connect).parameters
-                if "extra_headers" in sig:
-                    connect_args["extra_headers"] = connect_args.pop("headers")
-                else:
-                    connect_args["additional_headers"] = connect_args.pop("headers")
+                    sig = inspect.signature(websockets.connect).parameters
+                    if "extra_headers" in sig:
+                        connect_args["extra_headers"] = connect_args.pop("headers")
+                    else:
+                        connect_args["additional_headers"] = connect_args.pop("headers")
 
-                async with websockets.connect(**connect_args) as ws:
-                    async with async_timeout.timeout(WS_RECV_TIMEOUT):
-                        results = await ws.recv()
-            except Exception as exception:  # noqa: BLE001
+                    async with websockets.connect(**connect_args) as ws:
+                        async with async_timeout.timeout(WS_RECV_TIMEOUT):
+                            results = await ws.recv()
+                    break
+                except Exception as exception:  # noqa: BLE001
+                    LOGGER.debug(
+                        "Websocket read failed for device %s (attempt %d/%d): %s",
+                        device, attempt, max_attempts, exception,
+                    )
+                    if attempt < max_attempts:
+                        await asyncio.sleep(2)
+            if results is None:
+                LOGGER.error("Websocket read failed for device %s after %d attempts", device, max_attempts)
                 had_error = True
-                LOGGER.debug("Websocket read failed for device %s: %s", device, exception)
                 continue
             try:
                 data[device] = json.loads(results)
