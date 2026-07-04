@@ -68,9 +68,9 @@ class MillApiClient:
             headers=auth
         )
         LOGGER.debug(results)
-        self._token = results["authToken"]
-        self.userId = results["userId"]
-        self.devices = [d["device_id"] for d in results["devices"] if isinstance(d, dict) and d.get("device_id")]
+        self._token = results.get("authToken") or self._token
+        self.userId = results.get("userId")
+        self.devices = [d["device_id"] for d in results.get("devices", []) if isinstance(d, dict) and d.get("device_id")]
 
     async def async_get_data(self) -> dict[str, dict]:
         """Get data from the API."""
@@ -207,7 +207,12 @@ class MillApiClient:
             )
         response.raise_for_status()
         results = await response.json()
-        self._token = results.get("token")
+        token = results.get("token")
+        if not token:
+            raise MillApiClientAuthenticationError(
+                "No token returned in auth response",
+            )
+        self._token = token
 
 
     async def async_set_lock(self, device: str, setting: str) -> None:

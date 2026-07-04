@@ -9,7 +9,9 @@
   "loggers": [
     "custom_components.mill"
   ],
-  "requirements": [],
+  "requirements": [
+    "websockets>=12.0"
+  ],
   "version": "1.3.2",
   "dependencies": [],
   "codeowners": [

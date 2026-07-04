@@ -1,7 +1,10 @@
 """Select platform for mill."""
 from __future__ import annotations
 
+import asyncio
+
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.exceptions import ServiceValidationError
 
 from .const import DOMAIN, LOGGER
 from .coordinator import MillDataUpdateCoordinator
@@ -56,7 +59,7 @@ class MillSelect(MillEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the selected entity option."""
         desc = self.entity_description
-        lid_lock_data = self.coordinator.data[self.device].get(desc.key)
+        lid_lock_data = self.coordinator.data.get(self.device, {}).get(desc.key)
         
         if isinstance(lid_lock_data, dict):
             desired = lid_lock_data.get('desired')
@@ -79,18 +82,20 @@ class MillSelect(MillEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         if option not in self._attr_options:
-            LOGGER.error(f"Invalid option: {option}. Valid options: {self._attr_options}")
-            return
-            
+            raise ServiceValidationError(
+                f"Invalid option: {option}. Valid options: {self._attr_options}"
+            )
+
         await self.coordinator.client.async_set_lock(self.device, option)
         await self.coordinator.async_request_refresh()
 
         async def delayed_refresh():
-            import asyncio
-            await asyncio.sleep(5)  # Wait 5 seconds
-            await self.coordinator.async_request_refresh()
-            await asyncio.sleep(10)  # Wait another 10 seconds
-            await self.coordinator.async_request_refresh()
-        
-        # Run delayed refreshes in background
+            try:
+                await asyncio.sleep(5)
+                await self.coordinator.async_request_refresh()
+                await asyncio.sleep(10)
+                await self.coordinator.async_request_refresh()
+            except Exception:
+                LOGGER.debug("Delayed refresh failed for device %s", self.device)
+
         self.coordinator.hass.async_create_task(delayed_refresh())

@@ -57,6 +57,7 @@ ENTITY_DESCRIPTIONS = (
         name="Current Month Energy Use",
         icon="mdi:calendar-month",
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement="kWh",
     ),
 )
@@ -91,17 +92,17 @@ class MillSensor(MillEntity, SensorEntity):
         self.device = device
 
     @property
-    def native_value(self) -> str:
+    def native_value(self):
         """Return the native value of the sensor."""
         desc = self.entity_description
         if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
-          str_val = self.coordinator.data[self.device].get(desc.key)
+          str_val = self.coordinator.data.get(self.device, {}).get(desc.key)
           if str_val:
             value = parser.isoparse(str_val)
           else:
             value = None
         else:
-          value = self.coordinator.data[self.device].get(desc.key)
+          value = self.coordinator.data.get(self.device, {}).get(desc.key)
         if isinstance(value, dict):
             value = value.get('reported')
         return value
