@@ -1,5 +1,9 @@
 # Mill for Home Assistant
 
+<p align="center">
+  <img src="assets/mill.svg" alt="Mill" width="120" />
+</p>
+
 Home Assistant integration for Mill food recycler.
 
 # Installation
