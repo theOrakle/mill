@@ -7,10 +7,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from dateutil import parser
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .coordinator import MillDataUpdateCoordinator
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .coordinator import MillConfigEntry, MillDataUpdateCoordinator
 from .entity import MillEntity
 
 ENTITY_DESCRIPTIONS = (
@@ -63,10 +65,14 @@ ENTITY_DESCRIPTIONS = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: MillConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices(
+    coordinator = entry.runtime_data
+    async_add_entities(
         MillSensor(
             coordinator=coordinator,
             entity_description=entity_description,
@@ -88,8 +94,6 @@ class MillSensor(MillEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor class."""
         super().__init__(coordinator,entity_description,device)
-        self.entity_description = entity_description
-        self.device = device
 
     @property
     def native_value(self):
@@ -98,7 +102,7 @@ class MillSensor(MillEntity, SensorEntity):
         if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
           str_val = self.coordinator.data.get(self.device, {}).get(desc.key)
           if str_val:
-            value = parser.isoparse(str_val)
+            value = dt_util.parse_datetime(str_val)
           else:
             value = None
         else:

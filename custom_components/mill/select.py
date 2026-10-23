@@ -4,10 +4,14 @@ from __future__ import annotations
 import asyncio
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.exceptions import ServiceValidationError
 
-from .const import DOMAIN, LOGGER
-from .coordinator import MillDataUpdateCoordinator
+from .const import LOGGER
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .coordinator import MillConfigEntry, MillDataUpdateCoordinator
 from .entity import MillEntity
 
 ENTITY_DESCRIPTIONS = (
@@ -15,14 +19,19 @@ ENTITY_DESCRIPTIONS = (
         key="lidLockSetting",
         name="Lid Lock Setting",
         icon="mdi:lock-outline",
+        entity_category=EntityCategory.CONFIG,
         options=["AlwaysLocked", "AlwaysUnlocked", "LockedWhenHot"],
     ),
 )
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: MillConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the select platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = []
     
     for device in coordinator.data:
@@ -37,7 +46,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
                     )
                 )
     
-    async_add_devices(entities)
+    async_add_entities(entities)
 
 
 class MillSelect(MillEntity, SelectEntity):
@@ -51,8 +60,6 @@ class MillSelect(MillEntity, SelectEntity):
     ) -> None:
         """Initialize the select class."""
         super().__init__(coordinator, entity_description, device)
-        self.entity_description = entity_description
-        self.device = device
         self._attr_options = entity_description.options
 
     @property

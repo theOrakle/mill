@@ -7,7 +7,6 @@ import socket
 from datetime import UTC, datetime
 
 import aiohttp
-import async_timeout
 import json
 import websockets
 
@@ -124,7 +123,7 @@ class MillApiClient:
                         connect_args["additional_headers"] = connect_args.pop("headers")
 
                     async with websockets.connect(**connect_args) as ws:
-                        async with async_timeout.timeout(WS_RECV_TIMEOUT):
+                        async with asyncio.timeout(WS_RECV_TIMEOUT):
                             results = await ws.recv()
                     break
                 except Exception as exception:  # noqa: BLE001
@@ -248,7 +247,7 @@ class MillApiClient:
         Only transport failures raise; the caller decides what a status means.
         """
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 response = await self._session.request(
                     method=method, url=url, json=json_body, headers=headers
                 )
@@ -371,7 +370,7 @@ class MillApiClient:
     ) -> dict:
         """Get information from the API."""
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 response = await self._session.request(
                     method=method,
                     url=url,

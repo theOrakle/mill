@@ -5,46 +5,42 @@ https://github.com/theOrakle/mill
 """
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_TOKEN, Platform
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import MillApiClient
-from .const import DOMAIN
-from .coordinator import MillDataUpdateCoordinator
+from .coordinator import MillConfigEntry, MillDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
-    Platform.SENSOR,
     Platform.BINARY_SENSOR,
-    Platform.SWITCH,
     Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 
 # https://developers.home-assistant.io/docs/config_entries_index/#setting-up-an-entry
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MillConfigEntry) -> bool:
     """Set up this integration using UI."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator = MillDataUpdateCoordinator(
-        hass=hass,
-        client=MillApiClient(
+    coordinator = MillDataUpdateCoordinator(
+        hass,
+        entry,
+        MillApiClient(
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
             session=async_get_clientsession(hass),
-            token=entry.data[CONF_TOKEN],
+            token=entry.data.get(CONF_TOKEN),
         ),
     )
-    # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
+    # Raises ConfigEntryNotReady (retry) or ConfigEntryAuthFailed (reauth).
     await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MillConfigEntry) -> bool:
     """Handle removal of an entry."""
-    if unloaded := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unloaded
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

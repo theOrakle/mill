@@ -6,6 +6,8 @@
 
 Home Assistant integration for Mill food recycler.
 
+It signs in to your mill.com account (cloud polling every 5 minutes) and creates a device per food recycler. Each device gets a Dry & Grind switch, a lid-lock setting, sensors for bucket contents, grinder state, cycle end time and energy use, and binary sensors for lid, bucket and connectivity.
+
 # Installation
 
 There are two main ways to install this custom component within your Home Assistant instance:
@@ -37,5 +39,15 @@ There is a config flow for this integration. After installing the custom compone
 2. Click **+ Add integration** (bottom right) to set up a new integration
 3. Search for **Mill** and click on it
 4. You will be guided through the rest of the setup process via the config flow
+
+# Actions
+
+This integration does not provide any actions. Control devices through the entities it creates (for example with the standard `switch`, `light`, `select` or `climate` actions).
+
+# Removing the integration
+
+1. Go to **Settings** → **Devices & services**, open **Mill**, click the three-dot menu (⋮) next to the entry and choose **Delete**. The Mill account entry, its devices and its entities are removed.
+2. If you installed through HACS, open **HACS**, find **Mill**, click the three-dot menu (⋮) and choose **Remove**. For a manual install, delete the **custom_components/mill** folder instead.
+3. Restart Home Assistant.
 
 ---

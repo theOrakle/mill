@@ -8,8 +8,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 
-from .const import DOMAIN
-from .coordinator import MillDataUpdateCoordinator
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .coordinator import MillConfigEntry, MillDataUpdateCoordinator
 from .entity import MillEntity
 
 ENTITY_DESCRIPTIONS = (
@@ -37,10 +39,14 @@ ENTITY_DESCRIPTIONS = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: MillConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the binary_sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices(
+    coordinator = entry.runtime_data
+    async_add_entities(
         MillBinarySensor(
             coordinator=coordinator,
             entity_description=entity_description,
@@ -62,8 +68,6 @@ class MillBinarySensor(MillEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the binary_sensor class."""
         super().__init__(coordinator,entity_description,device)
-        self.entity_description = entity_description
-        self.device = device
 
     @property
     def is_on(self) -> bool:

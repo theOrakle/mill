@@ -1,0 +1,6 @@
+pytest-homeassistant-custom-component
+pytest-cov
+ruff
+
+# Transitive deps pulled in when HA components import during test collection.
+websockets>=14.0
